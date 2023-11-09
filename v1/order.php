@@ -37,4 +37,19 @@ if (isset($_route)) {
             'total' => !empty($results['total']) ? $results['total'] : 0,
         ]);
     }
+    if ($_route == 'view') {
+        $results = $controller->view($_id);
+        echo json_encode($results);
+    }
+    if ($_route == 'update') {
+        $json = file_get_contents('php://input');
+        $postData = json_decode($json, true);
+        $results = $controller->update($postData, $_id);
+        echo json_encode($results);
+    }
+    if ($_route == 'delete') {
+        $json = file_get_contents('php://input');
+        $results = $controller->delete($_id);
+        echo json_encode($results);
+    }
 }
