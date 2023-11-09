@@ -29,4 +29,12 @@ if (isset($_route)) {
         $results = $controller->statusList();
         echo json_encode($results);
     }
+    if ($_route == 'paymode-list') {
+        $results = $controller->paymodeList();
+        echo json_encode($results);
+    }
+    if ($_route == 'order-list') {
+        $results = $controller->orderList();
+        echo json_encode($results);
+    }
 }

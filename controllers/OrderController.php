@@ -51,7 +51,17 @@ class OrderController
             $stmt->setFetchMode(PDO::FETCH_ASSOC);
             $results = $stmt->fetchAll();
             //
-            $countSql = "SELECT count(*) FROM orders WHERE is_deleted = 0 " . $likeConditionStr;
+            $countSql = "SELECT count(*) FROM orders "
+                    . "INNER JOIN businesses ON orders.business_id = businesses.business_id 
+                       LEFT JOIN (
+                                SELECT t1.*
+                                FROM order_status AS t1
+                                LEFT OUTER JOIN order_status AS t2 ON t1.order_id = t2.order_id 
+                                        AND (t1.status_date < t2.status_date 
+                                         OR (t1.status_date = t2.status_date AND t1.order_status_id < t2.order_status_id))
+                                WHERE t2.order_id IS NULL
+                                ) as temp ON temp.order_id = orders.order_id "
+                    . "WHERE orders.is_deleted = 0 " . $likeConditionStr;
             $countStmt = $this->conn->prepare($countSql);
             $countStmt->execute();
             $numberOfRows = $countStmt->fetchColumn();
