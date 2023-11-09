@@ -81,4 +81,26 @@ class DropdownController
             echo "Query failed: " . $e->getMessage();
         }
     }
+    
+    public function statusList() {
+        $sql = 'SELECT * FROM status ORDER BY status_id DESC';
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute();
+            $results = $stmt->fetchAll();
+            $listData = [];
+            if (!empty($results)) {
+                foreach ($results as $row) {
+                    $d = [
+                        'id' => $row['status_id'],
+                        'name' => $row['name']
+                    ];
+                    array_push($listData, $d);
+                }
+            }
+            return $listData;
+        } catch (Exception $e) {
+            echo "Query failed: " . $e->getMessage();
+        }
+    }
 }

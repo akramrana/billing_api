@@ -167,6 +167,19 @@ class OrderController
             //
             $row['items'] = $items;
             $row['status'] = $status;
+            //
+            $csSql = 'SELECT order_status.*,status.name '
+                    . 'FROM order_status INNER JOIN status ON order_status.status_id = status.status_id '
+                    . 'WHERE order_id=:order_id '
+                    . 'ORDER BY order_status_id DESC '
+                    . 'LIMIT 1';
+            $csStmt = $this->conn->prepare($csSql);
+            $csStmt->bindParam(":order_id", $id);
+            $csStmt->execute();
+            $csStmt->setFetchMode(PDO::FETCH_ASSOC);
+            $cstatus = $csStmt->fetch();
+            //
+            $row['current_status'] = $cstatus;
             return $row;
         } catch (Exception $e) {
             echo "Query failed: " . $e->getMessage();
@@ -230,6 +243,40 @@ class OrderController
             ];
         } catch (Exception $e) {
             echo "Query failed for delete: " . $e->getMessage();
+        }
+    }
+
+    public function changeStatus($bodyParam) {
+        $sql = 'SELECT * FROM order_status WHERE order_id =:order_id and status_id =:status_id ';
+        try {
+            $statement = $this->conn->prepare($sql);
+            $statement->bindParam(":order_id", $bodyParam['orderId']);
+            $statement->bindParam(":status_id", $bodyParam['statusId']);
+            $statement->execute();
+            $row = $statement->fetch();
+            if (!empty($row)) {
+                return [
+                    'status' => 0,
+                    'errorField' => '',
+                    'message' => 'Status already exist'
+                ];
+            } else {
+                $sData = [
+                    $bodyParam['orderId'],
+                    $bodyParam['statusId'],
+                    date('Y-m-d H:i:s'),
+                    $bodyParam['comment']
+                ];
+                $sQuery = 'INSERT into order_status (order_id,status_id,status_date,comment) VALUES(?,?,?,?)';
+                $sStatement = $this->conn->prepare($sQuery);
+                $sStatement->execute($sData);
+                return [
+                    'status' => 1,
+                    'errorField' => ''
+                ];
+            }
+        } catch (Exception $e) {
+            echo "Query failed: " . $e->getMessage();
         }
     }
 }

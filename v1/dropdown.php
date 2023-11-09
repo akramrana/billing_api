@@ -25,4 +25,8 @@ if (isset($_route)) {
         $results = $controller->sizeList();
         echo json_encode($results);
     }
+    if ($_route == 'status-list') {
+        $results = $controller->statusList();
+        echo json_encode($results);
+    }
 }

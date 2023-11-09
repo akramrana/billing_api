@@ -52,4 +52,10 @@ if (isset($_route)) {
         $results = $controller->delete($_id);
         echo json_encode($results);
     }
+    if ($_route == 'change-status') {
+        $json = file_get_contents('php://input');
+        $postData = json_decode($json, true);
+        $results = $controller->changeStatus($postData);
+        echo json_encode($results);
+    }
 }
