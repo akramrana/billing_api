@@ -134,7 +134,7 @@ class OrderController
     }
 
     public function view($id) {
-        $sql = 'SELECT orders.*,businesses.name '
+        $sql = 'SELECT orders.*,businesses.name,businesses.email,businesses.phone '
                 . 'FROM orders '
                 . 'INNER JOIN businesses ON orders.business_id = businesses.business_id  '
                 . 'WHERE orders.is_deleted = 0 and orders.order_id=:order_id';
