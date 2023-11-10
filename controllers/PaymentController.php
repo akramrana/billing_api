@@ -31,7 +31,7 @@ class PaymentController
                 $likeConditionStr = ' AND (' . implode(' OR ', $likeCondition) . ')';
             }
         }
-        $sql = "SELECT payments.payment_id id, payments.amount, payments.paymode, payments.order_id, payments.business_id, payments.created_at, orders.order_number, businesses.name business_name "
+        $sql = "SELECT payments.payment_id id, payments.amount, payments.paymode, payments.order_id, payments.business_id, DATE_FORMAT(payments.created_at,'%d/%m/%Y %h:%i %p') created_at, orders.order_number, businesses.name business_name "
                 . "FROM payments "
                 . "INNER JOIN orders ON payments.order_id = orders.order_id "
                 . "INNER JOIN businesses ON orders.business_id = businesses.business_id "

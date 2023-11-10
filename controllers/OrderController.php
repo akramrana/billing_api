@@ -31,7 +31,7 @@ class OrderController
                 $likeConditionStr = ' AND (' . implode(' OR ', $likeCondition) . ')';
             }
         }
-        $sql = "SELECT orders.order_id id, order_number, orders.business_id, orders.created_at,delivery_time,businesses.name,temp.status_id,status.name as status_name "
+        $sql = "SELECT orders.order_id id, order_number, orders.business_id, DATE_FORMAT(orders.created_at,'%d/%m/%Y %h:%i %p') created_at,delivery_time,businesses.name,temp.status_id,status.name as status_name "
                 . "FROM orders "
                 . "INNER JOIN businesses ON orders.business_id = businesses.business_id "
                 . "LEFT JOIN (
@@ -159,7 +159,7 @@ class OrderController
                     . 'FROM order_items '
                     . 'INNER JOIN colours ON order_items.colour_id = colours.colour_id '
                     . 'INNER JOIN sizes ON order_items.size_id = sizes.size_id '
-                    . 'WHERE order_id=:order_id';
+                    . 'WHERE order_id=:order_id ORDER BY order_item_id ASC';
             $iStmt = $this->conn->prepare($iSql);
             $iStmt->bindParam(":order_id", $id);
             $iStmt->execute();
@@ -190,6 +190,7 @@ class OrderController
             $cstatus = $csStmt->fetch();
             //
             $row['current_status'] = $cstatus;
+            $row['created_at'] = date('Y-m-d h:i A', strtotime($row['created_at']));
             return $row;
         } catch (Exception $e) {
             echo "Query failed: " . $e->getMessage();
