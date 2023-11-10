@@ -63,7 +63,7 @@ class LoginController
         $secret = '7c32d31dbdd39f2111da0b1dea59e94f3ed715fd8cdf0ca3ecf354ca1a2e3e30';
         //
         $today = date("Y-m-d H:i:s");
-        $hours = strtotime('+2 minutes', strtotime($today));
+        $hours = strtotime('+2 hours', strtotime($today));
         // Create the token header
         $header = json_encode([
             'typ' => 'JWT',
