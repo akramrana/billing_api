@@ -45,7 +45,7 @@ function fnDecrypt($ciphertext) {
 function checkToken($header, $checkToken = true) {
     $secret = '7c32d31dbdd39f2111da0b1dea59e94f3ed715fd8cdf0ca3ecf354ca1a2e3e30';
     if (empty($header['secret'])) {
-        throw new Exception("forbidden 403");
+       throw new Exception("forbidden 403");
     } else {
         $decrypt = fnDecrypt($header['secret']);
         if (!empty($decrypt)) {
@@ -59,7 +59,8 @@ function checkToken($header, $checkToken = true) {
                 } else {
                     if ($checkToken) {
                         if (empty($header['token'])) {
-                            throw new Exception("forbidden 403");
+                            header("HTTP/1.1 401 Unauthorized");
+                            exit;
                         } else {
                             $jwt = $header['token'];
                             $tokenParts = explode('.', $jwt);
@@ -71,8 +72,7 @@ function checkToken($header, $checkToken = true) {
                             $expirationTime = $payloadDecode->exp;
                             $currentDt = date("Y-m-d H:i:s");
                             $currentTime = strtotime($currentDt);
-                            //debugPrint($expirationTime);
-                            //debugPrint($currentTime);
+                            //
                             $tokenExpired = (($expirationTime - $currentTime) < 0);
                             // build a signature based on the header and payload using the secret
                             $base64UrlHeader = base64UrlEncode($header);
@@ -82,10 +82,12 @@ function checkToken($header, $checkToken = true) {
                             //
                             $signatureValid = ($base64UrlSignature === $signatureProvided);
                             if ($tokenExpired) {
-                                throw new Exception("forbidden token expired 403");
+                                header("HTTP/1.1 401 Unauthorized:token expired");
+                                exit;
                             }
                             if (!$signatureValid) {
-                                throw new Exception("forbidden jwt token invalid 403");
+                                header("HTTP/1.1 401 Unauthorized:jwt token invalid");
+                                exit;
                             }
                         }
                     }
