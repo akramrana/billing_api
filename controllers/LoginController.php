@@ -63,7 +63,7 @@ class LoginController
         $secret = '7c32d31dbdd39f2111da0b1dea59e94f3ed715fd8cdf0ca3ecf354ca1a2e3e30';
         //
         $today = date("Y-m-d H:i:s");
-        $hours = strtotime('+2 hours', strtotime($today));
+        $hours = strtotime('+2 minutes', strtotime($today));
         // Create the token header
         $header = json_encode([
             'typ' => 'JWT',
@@ -78,24 +78,15 @@ class LoginController
             'exp' => $hours
         ]);
         // Encode Header
-        $base64UrlHeader = $this->base64UrlEncode($header);
+        $base64UrlHeader = base64UrlEncode($header);
         // Encode Payload
-        $base64UrlPayload = $this->base64UrlEncode($payload);
+        $base64UrlPayload = base64UrlEncode($payload);
         // Create Signature Hash
         $signature = hash_hmac('sha256', $base64UrlHeader . "." . $base64UrlPayload, $secret, true);
         // Encode Signature to Base64Url String
-        $base64UrlSignature = $this->base64UrlEncode($signature);
+        $base64UrlSignature = base64UrlEncode($signature);
         // Create JWT
         $jwt = $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
-
         return $jwt;
-    }
-
-    private function base64UrlEncode($text) {
-        return str_replace(
-                ['+', '/', '='],
-                ['-', '_', ''],
-                base64_encode($text)
-        );
     }
 }

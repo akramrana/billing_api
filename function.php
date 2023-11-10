@@ -42,7 +42,8 @@ function fnDecrypt($ciphertext) {
     return $incoming_data;
 }
 
-function checkToken($header) {
+function checkToken($header, $checkToken = true) {
+    $secret = '7c32d31dbdd39f2111da0b1dea59e94f3ed715fd8cdf0ca3ecf354ca1a2e3e30';
     if (empty($header['secret'])) {
         throw new Exception("forbidden 403");
     } else {
@@ -55,6 +56,39 @@ function checkToken($header) {
                 $request_time = new DateTime($decrypt[0]);
                 if ($request_time < $date) {
                     throw new Exception("forbidden 403");
+                } else {
+                    if ($checkToken) {
+                        if (empty($header['token'])) {
+                            throw new Exception("forbidden 403");
+                        } else {
+                            $jwt = $header['token'];
+                            $tokenParts = explode('.', $jwt);
+                            $header = base64_decode($tokenParts[0]);
+                            $payload = base64_decode($tokenParts[1]);
+                            $signatureProvided = $tokenParts[2];
+                            //
+                            $payloadDecode = json_decode($payload);
+                            $expirationTime = $payloadDecode->exp;
+                            $currentDt = date("Y-m-d H:i:s");
+                            $currentTime = strtotime($currentDt);
+                            //debugPrint($expirationTime);
+                            //debugPrint($currentTime);
+                            $tokenExpired = (($expirationTime - $currentTime) < 0);
+                            // build a signature based on the header and payload using the secret
+                            $base64UrlHeader = base64UrlEncode($header);
+                            $base64UrlPayload = base64UrlEncode($payload);
+                            $signature = hash_hmac('sha256', $base64UrlHeader . "." . $base64UrlPayload, $secret, true);
+                            $base64UrlSignature = base64UrlEncode($signature);
+                            //
+                            $signatureValid = ($base64UrlSignature === $signatureProvided);
+                            if ($tokenExpired) {
+                                throw new Exception("forbidden token expired 403");
+                            }
+                            if (!$signatureValid) {
+                                throw new Exception("forbidden jwt token invalid 403");
+                            }
+                        }
+                    }
                 }
             } else {
                 throw new Exception("forbidden 403");
@@ -78,4 +112,12 @@ function replace_space($name) {
 
 function enToFa($string) {
     return strtr($string, array('0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹'));
+}
+
+function base64UrlEncode($text) {
+    return str_replace(
+            ['+', '/', '='],
+            ['-', '_', ''],
+            base64_encode($text)
+    );
 }

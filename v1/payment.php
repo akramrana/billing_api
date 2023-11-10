@@ -1,12 +1,15 @@
 <?php
 
-header("Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, access-control-allow-origin, secret");
+header("Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, access-control-allow-origin, secret, token");
 header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD');
 header('Content-Type: application/json; charset=utf-8');
 
 require_once '../function.php';
 require_once '../db.php';
 require_once '../controllers/PaymentController.php';
+
+$header = getallheaders();
+checkToken($header);
 
 $_page = !empty($_GET['_page']) ? filter_input(INPUT_GET, '_page', FILTER_DEFAULT) : 1;
 $_limit = !empty($_GET['_limit']) ? filter_input(INPUT_GET, '_limit', FILTER_DEFAULT) : 20;

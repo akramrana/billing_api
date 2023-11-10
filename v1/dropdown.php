@@ -1,12 +1,15 @@
 <?php
 
-header("Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, access-control-allow-origin, secret");
+header("Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, access-control-allow-origin, secret, token");
 header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD');
 header('Content-Type: application/json; charset=utf-8');
 
 require_once '../function.php';
 require_once '../db.php';
 require_once '../controllers/DropdownController.php';
+
+$header = getallheaders();
+checkToken($header);
 
 $_route = !empty($_GET['_route']) ? filter_input(INPUT_GET, '_route', FILTER_DEFAULT) : 'index';
 
