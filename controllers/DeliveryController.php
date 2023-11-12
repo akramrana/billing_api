@@ -1,10 +1,5 @@
 <?php
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Scripting/PHPClass.php to edit this template
- */
-
 /**
  * Description of DeliveryController
  *
@@ -38,10 +33,12 @@ class DeliveryController
         }
     }
 
-    public function list($_page, $limit, $likes = []) {
+    public function list($_page, $limit, $likes = [], $wheres = []) {
         $offset = ($_page - 1) * $limit;
         $likeCondition = [];
         $likeConditionStr = "";
+        $whereCondition = [];
+        $whereConditionStr = "";
         if (!empty($likes)) {
             foreach ($likes as $key => $value) {
                 if (isset($value)) {
@@ -52,8 +49,18 @@ class DeliveryController
                 $likeConditionStr = ' AND (' . implode(' OR ', $likeCondition) . ')';
             }
         }
-        $sql = "SELECT delivery_id id, delivery_number, delivery_man, DATE_FORMAT(deliveries.created_at,'%d/%m/%Y %h:%i %p') created_at FROM deliveries "
-                . "WHERE is_deleted = 0 $likeConditionStr "
+        if (!empty($wheres)) {
+            foreach ($wheres as $key => $value) {
+                if (isset($value)) {
+                    $whereCondition[] = $key . ' = \'' . $value . '\'';
+                }
+            }
+            if (!empty($whereCondition)) {
+                $whereConditionStr = ' AND (' . implode(' AND ', $whereCondition) . ')';
+            }
+        }
+        $sql = "SELECT delivery_id id, delivery_number, delivery_man, DATE_FORMAT(deliveries.created_at,'%Y-%m-%d %h:%i %p') created_at FROM deliveries "
+                . "WHERE is_deleted = 0 $whereConditionStr $likeConditionStr "
                 . "ORDER BY delivery_id DESC limit $offset,$limit";
         //echo $sql;
         try {
@@ -62,7 +69,7 @@ class DeliveryController
             $stmt->setFetchMode(PDO::FETCH_ASSOC);
             $results = $stmt->fetchAll();
             //
-            $countSql = "SELECT count(*) FROM deliveries WHERE is_deleted = 0 " . $likeConditionStr;
+            $countSql = "SELECT count(*) FROM deliveries WHERE is_deleted = 0 " . $whereConditionStr . $likeConditionStr;
             $countStmt = $this->conn->prepare($countSql);
             $countStmt->execute();
             $numberOfRows = $countStmt->fetchColumn();
@@ -199,7 +206,7 @@ class DeliveryController
             echo "Query failed: " . $e->getMessage();
         }
     }
-    
+
     public function delete($id) {
         $data = [
             'updated_at' => date("Y-m-d H:i:s"),

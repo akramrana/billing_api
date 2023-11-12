@@ -17,10 +17,12 @@ class OrderController
         $this->conn = $this->db->connect();
     }
 
-    public function list($_page, $limit, $likes = []) {
+    public function list($_page, $limit, $likes = [], $wheres = []) {
         $offset = ($_page - 1) * $limit;
         $likeCondition = [];
+        $whereCondition = [];
         $likeConditionStr = "";
+        $whereConditionStr = "";
         if (!empty($likes)) {
             foreach ($likes as $key => $value) {
                 if (isset($value)) {
@@ -31,7 +33,18 @@ class OrderController
                 $likeConditionStr = ' AND (' . implode(' OR ', $likeCondition) . ')';
             }
         }
-        $sql = "SELECT orders.order_id id, order_number, orders.business_id, DATE_FORMAT(orders.created_at,'%d/%m/%Y %h:%i %p') created_at,delivery_time,businesses.name,temp.status_id,status.name as status_name "
+        if (!empty($wheres)) {
+            foreach ($wheres as $key => $value) {
+                if (isset($value)) {
+                    $whereCondition[] = $key . ' = \'' . $value . '\'';
+                }
+            }
+            if (!empty($whereCondition)) {
+                $whereConditionStr = ' AND (' . implode(' AND ', $whereCondition) . ')';
+            }
+        }
+        //echo $whereConditionStr;
+        $sql = "SELECT orders.order_id id, order_number, orders.business_id, DATE_FORMAT(orders.created_at,'%Y-%m-%d %h:%i %p') created_at,delivery_time,businesses.name,temp.status_id,status.name as status_name "
                 . "FROM orders "
                 . "INNER JOIN businesses ON orders.business_id = businesses.business_id "
                 . "LEFT JOIN (
@@ -43,7 +56,7 @@ class OrderController
                                 WHERE t2.order_id IS NULL
                                 ) as temp ON temp.order_id = orders.order_id "
                 . "INNER JOIN status ON temp.status_id = status.status_id "
-                . "WHERE orders.is_deleted = 0 $likeConditionStr ORDER BY orders.order_id DESC limit $offset,$limit";
+                . "WHERE orders.is_deleted = 0 $whereConditionStr $likeConditionStr  ORDER BY orders.order_id DESC limit $offset,$limit";
         //echo $sql;
         try {
             $stmt = $this->conn->prepare($sql);
@@ -61,7 +74,7 @@ class OrderController
                                          OR (t1.status_date = t2.status_date AND t1.order_status_id < t2.order_status_id))
                                 WHERE t2.order_id IS NULL
                                 ) as temp ON temp.order_id = orders.order_id "
-                    . "WHERE orders.is_deleted = 0 " . $likeConditionStr;
+                    . "WHERE orders.is_deleted = 0 " . $whereConditionStr . $likeConditionStr;
             $countStmt = $this->conn->prepare($countSql);
             $countStmt->execute();
             $numberOfRows = $countStmt->fetchColumn();

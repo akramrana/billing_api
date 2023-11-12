@@ -16,18 +16,24 @@ $_limit = !empty($_GET['_limit']) ? filter_input(INPUT_GET, '_limit', FILTER_DEF
 $_route = !empty($_GET['_route']) ? filter_input(INPUT_GET, '_route', FILTER_DEFAULT) : 'index';
 $_id = !empty($_GET['id']) ? filter_input(INPUT_GET, 'id', FILTER_DEFAULT) : null;
 
+$created_at_like = filter_input(INPUT_GET, 'created_at_like', FILTER_DEFAULT);
+$created_at = isset($created_at_like) ? date('Y-m-d', strtotime(trim($created_at_like))) : null;
+
 $likes = [
     'orders.order_number' => filter_input(INPUT_GET, 'order_number_like', FILTER_DEFAULT),
     'businesses.name' => filter_input(INPUT_GET, 'business_name_like', FILTER_DEFAULT),
     'payments.amount' => filter_input(INPUT_GET, 'amount_like', FILTER_DEFAULT),
     'payments.paymode' => filter_input(INPUT_GET, 'paymode_like', FILTER_DEFAULT),
 ];
+$where = [
+    'DATE(payments.created_at)' => $created_at,
+];
 
 $controller = new PaymentController();
 
 if (isset($_route)) {
     if ($_route == 'index') {
-        $results = $controller->list($_page, $_limit, $likes);
+        $results = $controller->list($_page, $_limit, $likes, $where);
         echo json_encode([
             'data' => !empty($results['data']) ? $results['data'] : [],
             'total' => !empty($results['total']) ? $results['total'] : 0,

@@ -17,10 +17,12 @@ class PaymentController
         $this->conn = $this->db->connect();
     }
 
-    public function list($_page, $limit, $likes = []) {
+    public function list($_page, $limit, $likes = [], $wheres = []) {
         $offset = ($_page - 1) * $limit;
         $likeCondition = [];
         $likeConditionStr = "";
+        $whereCondition = [];
+        $whereConditionStr = "";
         if (!empty($likes)) {
             foreach ($likes as $key => $value) {
                 if (isset($value)) {
@@ -31,11 +33,21 @@ class PaymentController
                 $likeConditionStr = ' AND (' . implode(' OR ', $likeCondition) . ')';
             }
         }
-        $sql = "SELECT payments.payment_id id, payments.amount, payments.paymode, payments.order_id, payments.business_id, DATE_FORMAT(payments.created_at,'%d/%m/%Y %h:%i %p') created_at, orders.order_number, businesses.name business_name "
+        if (!empty($wheres)) {
+            foreach ($wheres as $key => $value) {
+                if (isset($value)) {
+                    $whereCondition[] = $key . ' = \'' . $value . '\'';
+                }
+            }
+            if (!empty($whereCondition)) {
+                $whereConditionStr = ' AND (' . implode(' AND ', $whereCondition) . ')';
+            }
+        }
+        $sql = "SELECT payments.payment_id id, payments.amount, payments.paymode, payments.order_id, payments.business_id, DATE_FORMAT(payments.created_at,'%Y-%m-%d %h:%i %p') created_at, orders.order_number, businesses.name business_name "
                 . "FROM payments "
                 . "INNER JOIN orders ON payments.order_id = orders.order_id "
                 . "INNER JOIN businesses ON orders.business_id = businesses.business_id "
-                . "WHERE payments.is_deleted = 0 AND orders.is_deleted = 0 $likeConditionStr "
+                . "WHERE payments.is_deleted = 0 AND orders.is_deleted = 0 $whereConditionStr $likeConditionStr "
                 . "ORDER BY payments.payment_id DESC "
                 . "limit $offset,$limit";
         //debugPrint($sql);
@@ -48,7 +60,7 @@ class PaymentController
             $countSql = "SELECT count(*) FROM payments "
                     . "INNER JOIN orders ON payments.order_id = orders.order_id  "
                     . "INNER JOIN businesses ON orders.business_id = businesses.business_id "
-                    . "WHERE payments.is_deleted = 0 " . $likeConditionStr;
+                    . "WHERE payments.is_deleted = 0 " . $whereConditionStr . $likeConditionStr;
             $countStmt = $this->conn->prepare($countSql);
             $countStmt->execute();
             $numberOfRows = $countStmt->fetchColumn();

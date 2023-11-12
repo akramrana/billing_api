@@ -16,9 +16,16 @@ $_page = !empty($_GET['_page']) ? filter_input(INPUT_GET, '_page', FILTER_DEFAUL
 $_limit = !empty($_GET['_limit']) ? filter_input(INPUT_GET, '_limit', FILTER_DEFAULT) : 20;
 $_id = !empty($_GET['id']) ? filter_input(INPUT_GET, 'id', FILTER_DEFAULT) : null;
 
+$created_at_like = filter_input(INPUT_GET, 'created_at_like', FILTER_DEFAULT);
+$created_at = isset($created_at_like) ? date('Y-m-d', strtotime(trim($created_at_like))) : null;
+
+
 $likes = [
     'deliveries.delivery_number' => filter_input(INPUT_GET, 'delivery_number_like', FILTER_DEFAULT),
     'deliveries.delivery_man' => filter_input(INPUT_GET, 'delivery_man_like', FILTER_DEFAULT),
+];
+$where = [
+    'DATE(deliveries.created_at)' => $created_at,
 ];
 
 $controller = new DeliveryController();
@@ -35,7 +42,7 @@ if (isset($_route)) {
         echo json_encode($results);
     }
     if ($_route == 'index') {
-        $results = $controller->list($_page, $_limit, $likes);
+        $results = $controller->list($_page, $_limit, $likes, $where);
         echo json_encode([
             'data' => !empty($results['data']) ? $results['data'] : [],
             'total' => !empty($results['total']) ? $results['total'] : 0,
